@@ -1,0 +1,853 @@
+// App.js - Main component
+import React, { useState } from 'react';
+import WelcomeIntroduction from './components/WelcomeIntroduction';
+import CompanyBasicDetails from './components/CompanyBasicDetails';
+import RegulatoryCompliance from './components/RegulatoryCompliance';
+import KYCSignatory from './components/KYCSignatory';
+import FinancialInformation from './components/FinancialInformation';
+import LegalAgreements from './components/LegalAgreements';
+import FinalReview from './components/FinalReview';
+import SuccessPage from './components/SuccessPage';
+import ProgressStepper from './components/ProgressStepper';
+import MobileStepper from './components/MobileStepper';
+import { FormDataProvider } from './context/FormDataContext';
+import './styles/App.css';
+
+function App() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  
+  const pages = [
+    { id: 1, title: 'Welcome', component: WelcomeIntroduction },
+    { id: 2, title: 'Company Details', component: CompanyBasicDetails },
+    { id: 3, title: 'Compliance', component: RegulatoryCompliance },
+    { id: 4, title: 'KYC', component: KYCSignatory },
+    { id: 5, title: 'Financial', component: FinancialInformation },
+    { id: 6, title: 'Agreements', component: LegalAgreements },
+    { id: 7, title: 'Review', component: FinalReview },
+    { id: 8, title: 'Success', component: SuccessPage }
+  ];
+
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, pages.length));
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const goToPage = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleSubmit = () => {
+    setFormSubmitted(true);
+    goToNextPage();
+  };
+
+  const CurrentPageComponent = pages.find(page => page.id === currentPage)?.component;
+
+  return (
+    <FormDataProvider>
+      <div className="app-container">
+        <div className="container">
+          {!formSubmitted && (
+            <>
+              <div className="desktop-tablet-view">
+                <ProgressStepper currentStep={currentPage} totalSteps={7} />
+              </div>
+              <div className="mobile-view">
+                <MobileStepper currentStep={currentPage} totalSteps={7} stepTitle={pages.find(page => page.id === currentPage)?.title} />
+              </div>
+            </>
+          )}
+          
+          {CurrentPageComponent && (
+            <CurrentPageComponent
+              goToNextPage={goToNextPage}
+              goToPreviousPage={goToPreviousPage}
+              goToPage={goToPage}
+              onSubmit={handleSubmit}
+              isLastPage={currentPage === 7}
+            />
+          )}
+        </div>
+      </div>
+    </FormDataProvider>
+  );
+}
+
+export default App;
+
+// context/FormDataContext.js
+import React, { createContext, useContext, useState } from 'react';
+
+const FormDataContext = createContext();
+
+export const useFormData = () => useContext(FormDataContext);
+
+export const FormDataProvider = ({ children }) => {
+  const [formData, setFormData] = useState({
+    // Company Details
+    companyName: '',
+    registeredAddress: '',
+    corporateAddressIsDifferent: false,
+    corporateAddress: '',
+    companyType: '',
+    dateOfIncorporation: '',
+    cin: '',
+    llpin: '',
+    businessNature: '',
+    panNumber: '',
+    gstin: '',
+    
+    // Regulatory Compliance
+    certificateOfIncorporation: null,
+    moaAoa: null,
+    boardResolution: null,
+    rbiCertificate: null,
+    sebiCertificate: null,
+    udyamRegistration: null,
+    
+    // KYC & Signatory
+    signatoryName: '',
+    designation: '',
+    email: '',
+    contactNumber: '',
+    panCardUpload: null,
+    aadharPassportUpload: null,
+    photographUpload: null,
+    directors: [],
+    
+    // Financial Information
+    bankName: '',
+    accountNumber: '',
+    ifscCode: '',
+    cancelledCheque: null,
+    financialStatements: [],
+    incomeTaxReturns: [],
+    gstReturns: [],
+    netWorthCertificate: null,
+    creditReport: null,
+    
+    // Legal Agreements
+    masterAgreement: false,
+    slaAgreement: false,
+    dataAgreement: false,
+    ndaAgreement: false
+  });
+
+  const updateFormData = (newData) => {
+    setFormData(prev => ({ ...prev, ...newData }));
+  };
+
+  return (
+    <FormDataContext.Provider value={{ formData, updateFormData }}>
+      {children}
+    </FormDataContext.Provider>
+  );
+};
+
+// components/ProgressStepper.js
+import React from 'react';
+import '../styles/ProgressStepper.css';
+
+const ProgressStepper = ({ currentStep, totalSteps }) => {
+  const steps = [
+    { id: 1, label: 'Welcome' },
+    { id: 2, label: 'Company Details' },
+    { id: 3, label: 'Compliance' },
+    { id: 4, label: 'KYC' },
+    { id: 5, label: 'Financial' },
+    { id: 6, label: 'Agreements' },
+    { id: 7, label: 'Review' }
+  ];
+
+  return (
+    <div className="stepper">
+      {steps.map((step) => (
+        <div 
+          key={step.id} 
+          className={`step ${currentStep === step.id ? 'active' : ''} ${currentStep > step.id ? 'completed' : ''}`}
+        >
+          <div className="step-number">{step.id}</div>
+          <div className="step-label">{step.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default ProgressStepper;
+
+// components/MobileStepper.js
+import React from 'react';
+import '../styles/MobileStepper.css';
+
+const MobileStepper = ({ currentStep, totalSteps, stepTitle }) => {
+  return (
+    <div className="mobile-stepper">
+      <div className="mobile-step-count">Step {currentStep} of {totalSteps}</div>
+      <div className="mobile-progress">{stepTitle}</div>
+    </div>
+  );
+};
+
+export default MobileStepper;
+
+// components/WelcomeIntroduction.js
+import React from 'react';
+import '../styles/WelcomeIntroduction.css';
+
+const WelcomeIntroduction = ({ goToNextPage }) => {
+  return (
+    <div className="page">
+      <div className="welcome-banner">
+        <h1>Welcome to Corporate Onboarding</h1>
+        <p>
+          Let's get you set up on our platform. This onboarding process will guide you through providing your company information,
+          compliance documents, and other necessary details for account setup.
+        </p>
+        <button className="btn btn-block" onClick={goToNextPage}>Get Started</button>
+      </div>
+    </div>
+  );
+};
+
+export default WelcomeIntroduction;
+
+// components/CompanyBasicDetails.js
+import React, { useState, useEffect } from 'react';
+import { useFormData } from '../context/FormDataContext';
+import '../styles/FormPages.css';
+
+const CompanyBasicDetails = ({ goToNextPage, goToPreviousPage }) => {
+  const { formData, updateFormData } = useFormData();
+  const [errors, setErrors] = useState({});
+  
+  // Form state
+  const [localFormData, setLocalFormData] = useState({
+    companyName: formData.companyName || '',
+    registeredAddress: formData.registeredAddress || '',
+    corporateAddressIsDifferent: formData.corporateAddressIsDifferent || false,
+    corporateAddress: formData.corporateAddress || '',
+    companyType: formData.companyType || '',
+    dateOfIncorporation: formData.dateOfIncorporation || '',
+    cin: formData.cin || '',
+    llpin: formData.llpin || '',
+    businessNature: formData.businessNature || '',
+    panNumber: formData.panNumber || '',
+    gstin: formData.gstin || ''
+  });
+
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setLocalFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  // Show/hide LLPIN field based on company type
+  useEffect(() => {
+    if (localFormData.companyType === 'llp') {
+      setLocalFormData(prev => ({
+        ...prev,
+        cin: ''
+      }));
+    } else {
+      setLocalFormData(prev => ({
+        ...prev,
+        llpin: ''
+      }));
+    }
+  }, [localFormData.companyType]);
+
+  // Validation
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!localFormData.companyName.trim())
+      newErrors.companyName = 'Company name is required';
+    
+    if (!localFormData.registeredAddress.trim())
+      newErrors.registeredAddress = 'Registered address is required';
+    
+    if (!localFormData.companyType)
+      newErrors.companyType = 'Company type is required';
+    
+    if (!localFormData.dateOfIncorporation)
+      newErrors.dateOfIncorporation = 'Date of incorporation is required';
+    
+    if (localFormData.companyType !== 'llp' && !localFormData.cin)
+      newErrors.cin = 'CIN is required';
+    
+    if (localFormData.companyType === 'llp' && !localFormData.llpin)
+      newErrors.llpin = 'LLPIN is required';
+    
+    if (!localFormData.businessNature)
+      newErrors.businessNature = 'Nature of business is required';
+    
+    if (!localFormData.panNumber)
+      newErrors.panNumber = 'PAN number is required';
+    else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(localFormData.panNumber))
+      newErrors.panNumber = 'Invalid PAN format';
+    
+    if (localFormData.gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(localFormData.gstin))
+      newErrors.gstin = 'Invalid GSTIN format';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      updateFormData(localFormData);
+      goToNextPage();
+    }
+  };
+
+  return (
+    <div className="page">
+      <div className="form-section">
+        <h2>Company Basic Details</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className={`form-group ${errors.companyName ? 'invalid' : ''}`}>
+              <label htmlFor="companyName" className="required">Company Name</label>
+              <input
+                type="text"
+                id="companyName"
+                name="companyName"
+                value={localFormData.companyName}
+                onChange={handleChange}
+                placeholder="Enter legal company name"
+              />
+              {errors.companyName && <div className="error-message">{errors.companyName}</div>}
+            </div>
+
+            <div className={`form-group ${errors.companyType ? 'invalid' : ''}`}>
+              <label htmlFor="companyType" className="required">Company Type</label>
+              <select
+                id="companyType"
+                name="companyType"
+                value={localFormData.companyType}
+                onChange={handleChange}
+              >
+                <option value="">Select company type</option>
+                <option value="private">Private Limited Company</option>
+                <option value="public">Public Limited Company</option>
+                <option value="llp">Limited Liability Partnership (LLP)</option>
+                <option value="partnership">Partnership Firm</option>
+                <option value="proprietorship">Proprietorship</option>
+                <option value="opc">One Person Company (OPC)</option>
+              </select>
+              {errors.companyType && <div className="error-message">{errors.companyType}</div>}
+            </div>
+          </div>
+
+          <div className={`form-group ${errors.registeredAddress ? 'invalid' : ''}`}>
+            <label htmlFor="registeredAddress" className="required">Registered Business Address</label>
+            <textarea
+              id="registeredAddress"
+              name="registeredAddress"
+              rows="3"
+              value={localFormData.registeredAddress}
+              onChange={handleChange}
+              placeholder="Enter full registered address"
+            ></textarea>
+            {errors.registeredAddress && <div className="error-message">{errors.registeredAddress}</div>}
+          </div>
+
+          <div className="toggle-container">
+            <label className="toggle">
+              <input
+                type="checkbox"
+                name="corporateAddressIsDifferent"
+                checked={localFormData.corporateAddressIsDifferent}
+                onChange={handleChange}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+            <span>Corporate Office Address is different from Registered Address</span>
+          </div>
+
+          {localFormData.corporateAddressIsDifferent && (
+            <div className="form-group">
+              <label htmlFor="corporateAddress">Corporate Office Address</label>
+              <textarea
+                id="corporateAddress"
+                name="corporateAddress"
+                rows="3"
+                value={localFormData.corporateAddress}
+                onChange={handleChange}
+                placeholder="Enter corporate office address"
+              ></textarea>
+            </div>
+          )}
+
+          <div className="form-grid">
+            <div className={`form-group ${errors.dateOfIncorporation ? 'invalid' : ''}`}>
+              <label htmlFor="dateOfIncorporation" className="required">Date of Incorporation</label>
+              <input
+                type="date"
+                id="dateOfIncorporation"
+                name="dateOfIncorporation"
+                value={localFormData.dateOfIncorporation}
+                onChange={handleChange}
+              />
+              {errors.dateOfIncorporation && <div className="error-message">{errors.dateOfIncorporation}</div>}
+            </div>
+
+            {localFormData.companyType !== 'llp' && (
+              <div className={`form-group ${errors.cin ? 'invalid' : ''}`}>
+                <label htmlFor="cin" className="required">CIN (Corporate Identification Number)</label>
+                <input
+                  type="text"
+                  id="cin"
+                  name="cin"
+                  value={localFormData.cin}
+                  onChange={handleChange}
+                  placeholder="Enter 21-digit CIN"
+                />
+                {errors.cin && <div className="error-message">{errors.cin}</div>}
+              </div>
+            )}
+
+            {localFormData.companyType === 'llp' && (
+              <div className={`form-group ${errors.llpin ? 'invalid' : ''}`}>
+                <label htmlFor="llpin" className="required">LLPIN (For LLPs)</label>
+                <input
+                  type="text"
+                  id="llpin"
+                  name="llpin"
+                  value={localFormData.llpin}
+                  onChange={handleChange}
+                  placeholder="Enter LLPIN"
+                />
+                {errors.llpin && <div className="error-message">{errors.llpin}</div>}
+              </div>
+            )}
+
+            <div className={`form-group ${errors.businessNature ? 'invalid' : ''}`}>
+              <label htmlFor="businessNature" className="required">Nature of Business</label>
+              <select
+                id="businessNature"
+                name="businessNature"
+                value={localFormData.businessNature}
+                onChange={handleChange}
+              >
+                <option value="">Select business category</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="services">Services</option>
+                <option value="retail">Retail</option>
+                <option value="it">Information Technology</option>
+                <option value="finance">Finance & Banking</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="education">Education</option>
+                <option value="construction">Construction & Real Estate</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.businessNature && <div className="error-message">{errors.businessNature}</div>}
+            </div>
+
+            <div className={`form-group ${errors.panNumber ? 'invalid' : ''}`}>
+              <label htmlFor="panNumber" className="required">PAN Number</label>
+              <input
+                type="text"
+                id="panNumber"
+                name="panNumber"
+                value={localFormData.panNumber}
+                onChange={handleChange}
+                placeholder="Enter 10-digit PAN number"
+              />
+              {errors.panNumber && <div className="error-message">{errors.panNumber}</div>}
+            </div>
+
+            <div className={`form-group ${errors.gstin ? 'invalid' : ''}`}>
+              <label htmlFor="gstin">GSTIN (if applicable)</label>
+              <input
+                type="text"
+                id="gstin"
+                name="gstin"
+                value={localFormData.gstin}
+                onChange={handleChange}
+                placeholder="Enter 15-digit GSTIN"
+              />
+              {errors.gstin && <div className="error-message">{errors.gstin}</div>}
+            </div>
+          </div>
+
+          <div className="nav-buttons">
+            <button type="button" className="btn btn-outline" onClick={goToPreviousPage}>Previous</button>
+            <button type="submit" className="btn">Save & Next</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default CompanyBasicDetails;
+
+// components/RegulatoryCompliance.js
+import React, { useState } from 'react';
+import { useFormData } from '../context/FormDataContext';
+import FileUploadField from './common/FileUploadField';
+import '../styles/FormPages.css';
+
+const RegulatoryCompliance = ({ goToNextPage, goToPreviousPage }) => {
+  const { formData, updateFormData } = useFormData();
+  const [errors, setErrors] = useState({});
+  
+  const [localFormData, setLocalFormData] = useState({
+    certificateOfIncorporation: formData.certificateOfIncorporation,
+    moaAoa: formData.moaAoa,
+    boardResolution: formData.boardResolution,
+    rbiCertificate: formData.rbiCertificate,
+    sebiCertificate: formData.sebiCertificate,
+    udyamRegistration: formData.udyamRegistration
+  });
+
+  const handleFileChange = (name, file) => {
+    setLocalFormData(prev => ({
+      ...prev,
+      [name]: file
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!localFormData.certificateOfIncorporation)
+      newErrors.certificateOfIncorporation = 'Certificate of Incorporation is required';
+    
+    if (!localFormData.moaAoa)
+      newErrors.moaAoa = 'MoA & AoA documents are required';
+    
+    if (!localFormData.boardResolution)
+      newErrors.boardResolution = 'Board Resolution document is required';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      updateFormData(localFormData);
+      goToNextPage();
+    }
+  };
+
+  return (
+    <div className="page">
+      <div className="form-section">
+        <h2>Regulatory & Compliance Information</h2>
+        <form onSubmit={handleSubmit}>
+          <FileUploadField
+            name="certificateOfIncorporation"
+            label="Certificate of Incorporation"
+            tooltip="Certificate issued by Registrar of Companies (RoC). PDF format, max 5MB."
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={(file) => handleFileChange('certificateOfIncorporation', file)}
+            initialFile={localFormData.certificateOfIncorporation}
+            errorMessage={errors.certificateOfIncorporation}
+            required
+          />
+
+          <FileUploadField
+            name="moaAoa"
+            label="MoA & AoA"
+            tooltip="Memorandum and Articles of Association documents. PDF format, max 10MB."
+            accept=".pdf"
+            onChange={(file) => handleFileChange('moaAoa', file)}
+            initialFile={localFormData.moaAoa}
+            errorMessage={errors.moaAoa}
+            required
+          />
+
+          <FileUploadField
+            name="boardResolution"
+            label="Board Resolution Document"
+            tooltip="Board resolution authorizing application and designating signatories. PDF format, max 5MB."
+            accept=".pdf"
+            onChange={(file) => handleFileChange('boardResolution', file)}
+            initialFile={localFormData.boardResolution}
+            errorMessage={errors.boardResolution}
+            required
+          />
+
+          <FileUploadField
+            name="rbiCertificate"
+            label="RBI Registration Certificate (if NBFC)"
+            tooltip="Required only for Non-Banking Financial Companies. PDF format, max 5MB."
+            accept=".pdf"
+            onChange={(file) => handleFileChange('rbiCertificate', file)}
+            initialFile={localFormData.rbiCertificate}
+          />
+
+          <FileUploadField
+            name="sebiCertificate"
+            label="SEBI Registration Certificate (if applicable)"
+            tooltip="Required for entities regulated by SEBI. PDF format, max 5MB."
+            accept=".pdf"
+            onChange={(file) => handleFileChange('sebiCertificate', file)}
+            initialFile={localFormData.sebiCertificate}
+          />
+
+          <FileUploadField
+            name="udyamRegistration"
+            label="Udyam Registration (MSME Certificate)"
+            tooltip="Required for Micro, Small and Medium Enterprises. PDF format, max 5MB."
+            accept=".pdf"
+            onChange={(file) => handleFileChange('udyamRegistration', file)}
+            initialFile={localFormData.udyamRegistration}
+          />
+
+          <div className="nav-buttons">
+            <button type="button" className="btn btn-outline" onClick={goToPreviousPage}>Previous</button>
+            <button type="submit" className="btn">Save & Next</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default RegulatoryCompliance;
+
+// components/common/FileUploadField.js
+import React, { useState, useRef } from 'react';
+import '../../styles/FileUploadField.css';
+
+const FileUploadField = ({ name, label, tooltip, accept, onChange, initialFile, errorMessage, required = false }) => {
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileName, setFileName] = useState(initialFile ? initialFile.name : '');
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setFileName(file.name);
+    simulateUpload(file);
+  };
+
+  const simulateUpload = (file) => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsUploading(false);
+          onChange(file);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 200);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    
+    setFileName(file.name);
+    simulateUpload(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const openFileDialog = () => {
+    fileInputRef.current.click();
+  };
+
+  return (
+    <div className={`form-group ${errorMessage ? 'invalid' : ''}`}>
+      <label htmlFor={name} className={required ? 'required' : ''}>
+        {label}
+        {tooltip && (
+          <span className="tooltip">i
+            <span className="tooltip-text">{tooltip}</span>
+          </span>
+        )}
+      </label>
+      <div 
+        className="upload-area"
+        onClick={openFileDialog}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
+        <div className="upload-icon">📄</div>
+        {fileName ? (
+          <p className="upload-text file-selected">{fileName}</p>
+        ) : (
+          <>
+            <p className="upload-text">Drag & drop your file here or</p>
+            <span className="upload-button">Browse Files</span>
+          </>
+        )}
+        <input 
+          type="file"
+          id={name}
+          ref={fileInputRef}
+          style={{ display: 'none' }} 
+          accept={accept}
+          onChange={handleFileChange}
+        />
+        <p className="upload-formats">Accepted formats: {accept.replace(/\./g, ' ').toUpperCase()} (Max 5MB)</p>
+        <div className="upload-progress" style={{ display: isUploading ? 'block' : 'none' }}>
+          <div className="upload-progress-bar" style={{ width: `${uploadProgress}%` }}></div>
+        </div>
+      </div>
+      {errorMessage && <div className="error-message">{errorMessage}</div>}
+    </div>
+  );
+};
+
+export default FileUploadField;
+
+// components/KYCSignatory.js
+import React, { useState } from 'react';
+import { useFormData } from '../context/FormDataContext';
+import FileUploadField from './common/FileUploadField';
+import DirectorForm from './common/DirectorForm';
+import '../styles/FormPages.css';
+
+const KYCSignatory = ({ goToNextPage, goToPreviousPage }) => {
+  const { formData, updateFormData } = useFormData();
+  const [errors, setErrors] = useState({});
+  
+  const [localFormData, setLocalFormData] = useState({
+    signatoryName: formData.signatoryName || '',
+    designation: formData.designation || '',
+    email: formData.email || '',
+    contactNumber: formData.contactNumber || '',
+    panCardUpload: formData.panCardUpload,
+    aadharPassportUpload: formData.aadharPassportUpload,
+    photographUpload: formData.photographUpload,
+    directors: formData.directors || []
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setLocalFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFileChange = (name, file) => {
+    setLocalFormData(prev => ({
+      ...prev,
+      [name]: file
+    }));
+  };
+
+  const handleAddDirector = () => {
+    setLocalFormData(prev => ({
+      ...prev,
+      directors: [...prev.directors, { 
+        name: '', 
+        din: '', 
+        panUpload: null, 
+        aadharUpload: null 
+      }]
+    }));
+  };
+
+  const handleUpdateDirector = (index, directorData) => {
+    setLocalFormData(prev => {
+      const updatedDirectors = [...prev.directors];
+      updatedDirectors[index] = directorData;
+      return {
+        ...prev,
+        directors: updatedDirectors
+      };
+    });
+  };
+
+  const handleRemoveDirector = (index) => {
+    setLocalFormData(prev => {
+      const updatedDirectors = [...prev.directors];
+      updatedDirectors.splice(index, 1);
+      return {
+        ...prev,
+        directors: updatedDirectors
+      };
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!localFormData.signatoryName.trim())
+      newErrors.signatoryName = 'Signatory name is required';
+    
+    if (!localFormData.designation)
+      newErrors.designation = 'Designation is required';
+    
+    if (!localFormData.email)
+      newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(localFormData.email))
+      newErrors.email = 'Invalid email format';
+    
+    if (!localFormData.contactNumber)
+      newErrors.contactNumber = 'Contact number is required';
+    else if (!/^\d{10}$/.test(localFormData.contactNumber))
+      newErrors.contactNumber = 'Invalid contact number (10 digits required)';
+    
+    if (!localFormData.panCardUpload)
+      newErrors.panCardUpload = 'PAN card upload is required';
+    
+    if (!localFormData.aadharPassportUpload)
+      newErrors.aadharPassportUpload = 'Aadhaar/Passport upload is required';
+    
+    if (!localFormData.photographUpload)
+      newErrors.photographUpload = 'Photograph upload is required';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      updateFormData(localFormData);
+      goToNextPage();
+    }
+  };
+
+  return (
+    <div className="page">
+      <div className="form-section">
+        <h2>KYC & Authorized Signatory</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className={`form-group ${errors.signatoryName ? 'invalid' : ''}`}>
+              <label htmlFor="signatoryName" className="required">Authorized Signatory Name</label>
+              <input
+                type="text"
+                id="signatoryName"
+                name="signatoryName"
+                value={localFormData.signatoryName}
+                onChange={handleChange}
+                placeholder="Enter full name"
+              />
+              
